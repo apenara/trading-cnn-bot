@@ -1,5 +1,6 @@
-from data.exchange_connector import ExchangeConnector
+from data.mt5_connector import MT5Connector
 from models.cnn_model import TradingCNN
+import MetaTrader5 as mt5
 from sklearn.model_selection import train_test_split
 import numpy as np
 import os
@@ -7,19 +8,19 @@ from datetime import datetime
 
 def main():
     # Configurar el símbolo y timeframe para scalping
-    SYMBOL = "BTC/USDT"
-    TIMEFRAME = "1m"  # Timeframe de 1 minuto para scalping
+    SYMBOL = "EURUSD"
+    TIMEFRAME = mt5.TIMEFRAME_M1  # Timeframe de 1 minuto para scalping
     WINDOW_SIZE = 60  # Ventana de 60 minutos
     
-    # Inicializar conexión con el exchange
-    connector = ExchangeConnector()
+    # Inicializar conexión con MT5
+    connector = MT5Connector()
     if not connector.connect():
         return
         
     try:
         # Obtener datos históricos
         print(f"Obteniendo datos históricos para {SYMBOL}...")
-        df = connector.get_data(SYMBOL, TIMEFRAME, limit=10000)
+        df = connector.get_data(SYMBOL, TIMEFRAME, n_bars=10000)
         
         if df is None:
             print("Error obteniendo datos")
@@ -51,8 +52,9 @@ def main():
         model.save(model_path)
         print(f"\nModelo guardado en: {model_path}")
         
-    except Exception as e:
-        print(f"Error durante la ejecución: {e}")
+    finally:
+        # Cerrar conexión
+        connector.close()
 
 if __name__ == "__main__":
     main()
